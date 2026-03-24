@@ -15,4 +15,12 @@ public class GlobalExceptionHandler {
                 "message", ex.getMessage()
         ));
     }
+
+    @ExceptionHandler(RateLimitException.class)
+    public ResponseEntity<Map<String,Object>> handleRuntimeException(RuntimeException ex) {
+        return ResponseEntity.status(429).body(Map.of(
+                "error", "Too Many Requests",
+                "message", ex.getMessage()
+        ));
+    }
 }

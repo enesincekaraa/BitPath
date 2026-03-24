@@ -3,6 +3,7 @@ package com.enesincekara.bitpath.urlshortener.controller;
 import com.enesincekara.bitpath.urlshortener.dto.CreateShortUrlRequest;
 import com.enesincekara.bitpath.urlshortener.dto.CreateShortUrlResponse;
 import com.enesincekara.bitpath.urlshortener.service.UrlService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +25,16 @@ public class UrlController {
     }
 
     @GetMapping("/r/{shortCode}")
-    public ResponseEntity<Void> redirect(@PathVariable String shortCode) {
+    public ResponseEntity<Void> redirect(
+            @PathVariable String shortCode,
+            HttpServletRequest request) {
+
+        String clientIp = request.getRemoteAddr();
+
+        urlService.checkRateLimit(clientIp);
+
         String originalUrl = urlService.getOriginalUrl(shortCode);
+
         return ResponseEntity
                 .status(302)
                 .location(URI.create(originalUrl))
