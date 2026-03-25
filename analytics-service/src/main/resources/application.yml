@@ -1,7 +1,7 @@
-spring:
-  application:
-    name: url-shortener-service
+server:
+  port: 8081
 
+spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
     username: ${POSTGRES_USER}
@@ -12,22 +12,9 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-
-  data:
-    redis:
-      host: localhost
-      port: 6379
 
   kafka:
     bootstrap-servers: localhost:9092
-
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-
     consumer:
       group-id: analytics-group
       auto-offset-reset: earliest
@@ -35,8 +22,5 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "*"
-
-app:
-  rate-limit:
-    prefix: ${RATE_LIMIT_PREFIX}
-    max-requests: ${MAX_REQUESTS}
+        spring.json.value.default.type: "com.enesincekara.bitpath.analyticsservice.message.ClickEventMessage"
+        spring.json.use.type.headers: false
