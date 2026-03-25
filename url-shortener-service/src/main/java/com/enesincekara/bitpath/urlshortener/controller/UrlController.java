@@ -29,11 +29,7 @@ public class UrlController {
             @PathVariable String shortCode,
             HttpServletRequest request) {
 
-        String clientIp = request.getRemoteAddr();
-
-        urlService.checkRateLimit(clientIp);
-
-        String originalUrl = urlService.getOriginalUrl(shortCode);
+        String originalUrl = urlService.getOriginalUrl(shortCode, request.getRemoteAddr());
 
         return ResponseEntity
                 .status(302)

@@ -1,9 +1,11 @@
 package com.enesincekara.bitpath.urlshortener.service;
 
 import com.enesincekara.bitpath.urlshortener.dto.CreateShortUrlResponse;
+import com.enesincekara.bitpath.urlshortener.entity.ClickEvent;
 import com.enesincekara.bitpath.urlshortener.entity.ShortUrlEntity;
 import com.enesincekara.bitpath.urlshortener.exception.RateLimitException;
 import com.enesincekara.bitpath.urlshortener.exception.UrlNotFoundException;
+import com.enesincekara.bitpath.urlshortener.repository.ClickEventRepository;
 import com.enesincekara.bitpath.urlshortener.repository.ShortUrlRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ public class UrlService {
 
     private final ShortUrlRepository repository;
     private final StringRedisTemplate redisTemplate;
+    private final ClickEventRepository clickEventRepository;
 
 
     public CreateShortUrlResponse shortenUrl(String originalUrl) {
@@ -40,10 +43,14 @@ public class UrlService {
                 saved.getShortCode()
         );
     }
-    public String getOriginalUrl(String shortCode) {
+    public String getOriginalUrl(String shortCode,String ipAddress) {
+        checkRateLimit(ipAddress);
+
         String cachedUrl = redisTemplate.opsForValue().get(shortCode);
+
         if (cachedUrl != null) {
             log.info("Cache hit for short code: {}", shortCode);
+            saveClick(shortCode, ipAddress);
             return cachedUrl;
         }
         log.info("Cache miss for short code: {}", shortCode);
@@ -53,6 +60,7 @@ public class UrlService {
 
         String originalUrl = entity.getOriginalUrl();
         redisTemplate.opsForValue().set(shortCode, originalUrl,10, TimeUnit.MINUTES);
+        saveClick(shortCode, ipAddress);
         return originalUrl;
     }
 
@@ -71,4 +79,10 @@ public class UrlService {
     private String generateShortCode() {
         return UUID.randomUUID().toString().substring(0, 8);
     }
+
+    private void saveClick(String shortCode, String ip) {
+        ClickEvent clickEvent =new ClickEvent(shortCode, ip);
+        clickEventRepository.save(clickEvent);
+    }
+
 }
